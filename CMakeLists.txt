@@ -22,7 +22,8 @@ include_directories(${GLFW_DIR}/include)
 
 # Dear ImGui
 set(IMGUI_DIR libs/imgui)
-include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
+set(IMPLOT_DIR libs/implot)
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ${IMPLOT_DIR} ..)
 
 # Libraries
 find_package(Vulkan REQUIRED)
@@ -34,8 +35,11 @@ set(LIBRARIES "glfw;Vulkan::Vulkan")
 # Use vulkan headers from glfw:
 include_directories(${GLFW_DIR}/deps)
 
+# For FontAwesome Icons
+include_directories(libs/IconFontCppHeaders)
+
 #file(GLOB sources *.cpp)
 
-add_executable(example_glfw_vulkan main.cpp ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp)
+add_executable(example_glfw_vulkan main.cpp ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp ${IMPLOT_DIR}/implot_demo.cpp ${IMPLOT_DIR}/implot_items.cpp ${IMPLOT_DIR}/implot.cpp)
 target_link_libraries(example_glfw_vulkan ${LIBRARIES})
 target_compile_definitions(example_glfw_vulkan PUBLIC -DImTextureID=ImU64)

@@ -1,21 +1,7 @@
-// Dear ImGui: standalone example application for Glfw + Vulkan
-
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
-// Important note to the reader who wish to integrate imgui_impl_vulkan.cpp/.h in their own engine/app.
-// - Common ImGui_ImplVulkan_XXX functions and structures are used to interface with imgui_impl_vulkan.cpp/.h.
-//   You will use those if you want to use this rendering backend in your engine/app.
-// - Helper ImGui_ImplVulkanH_XXX functions and structures are only used by this example (main.cpp) and by
-//   the backend itself (imgui_impl_vulkan.cpp), but should PROBABLY NOT be used by your own engine/app code.
-// Read comments in imgui_impl_vulkan.h.
-
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+#include <implot.h>
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
 #define GLFW_INCLUDE_NONE
@@ -23,6 +9,19 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 //#include <vulkan/vulkan_beta.h>
+
+#include "systemTheme.hpp"
+
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include <dwmapi.h> // Add this at the top of your file
+#pragma comment(lib, "dwmapi.lib")
+#endif
+
+
+#include <cstring>
+
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -54,6 +53,48 @@ static bool                     g_SwapChainRebuild = false;
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+void scaleUIContent(float scale)
+{
+    
+    ImGuiIO& io = ImGui::GetIO();
+    printf("Scaling by: %f\n", scale);
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle styleold = style; // Backup colors
+    style = ImGuiStyle(); // IMPORTANT: ScaleAllSizes will change the original size, so we should reset all style config
+    style.WindowBorderSize = 1.0f;
+    style.ChildBorderSize  = 1.0f;
+    style.PopupBorderSize  = 1.0f;
+    style.FrameBorderSize  = 1.0f;
+    style.TabBorderSize    = 1.0f;
+    style.WindowRounding    = 0.0f;
+    style.ChildRounding     = 0.0f;
+    style.PopupRounding     = 0.0f;
+    style.FrameRounding     = 0.0f;
+    style.ScrollbarRounding = 0.0f;
+    style.GrabRounding      = 0.0f;
+    style.TabRounding       = 0.0f;
+    style.ScaleAllSizes(scale);
+    std::memcpy(style.Colors, styleold.Colors, sizeof(style.Colors)); // Restore colors
+    
+    if((bool)(int)(io.Fonts->Fonts.Size))
+        io.FontGlobalScale = 1.0f / scale; // Scaling font if already loaded
+    else{
+        io.Fonts->Clear();
+        ImFont* font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttc", 16.0f * scale);
+        if (font == NULL)
+            font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttf", 16.0f * scale); // Windows 7
+        if (font == NULL)
+            font = io.Fonts->AddFontFromFileTTF("../../Resources/Roboto-Regular.ttf", 16.0f * scale); // Windows 10
+        IM_ASSERT(font != NULL);
+    }
+}
+void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+{
+    if (xscale != yscale){
+        printf("Window content scale is not uniform\n");
+    }
+    scaleUIContent(xscale);
 }
 static void check_vk_result(VkResult err)
 {
@@ -382,18 +423,24 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
 // Main code
 int main(int, char**)
 {
+    printf("Dear ImGui GLFW+Vulkan example\n");
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
+    
 
     // Create window with Vulkan context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Window Title Name", nullptr, nullptr);
     if (!glfwVulkanSupported())
     {
         printf("GLFW: Vulkan Not Supported\n");
         return 1;
     }
+    glfwSetWindowContentScaleCallback(window, window_content_scale_callback);
+    float contenScale;
+    glfwGetWindowContentScale(window, &contenScale, nullptr);
+    
 
     ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
@@ -412,19 +459,28 @@ int main(int, char**)
     glfwGetFramebufferSize(window, &w, &h);
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     SetupVulkanWindow(wd, surface, w, h);
-
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
+    
+
     io.IniFilename = NULL;
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
+    if(isDarkMode()){
+        ImGui::StyleColorsDark();
+        HWND hwnd = glfwGetWin32Window(window);
+        BOOL value = true;
+        ::DwmSetWindowAttribute(hwnd, 20, &value, sizeof(value));
+        // SetPropW(hwnd, L"UseImmersiveDarkMode", reinterpret_cast<HANDLE>(1));
+    }
+    else
+        ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -445,36 +501,19 @@ int main(int, char**)
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != nullptr);
+    scaleUIContent(contenScale);
 
     // Our state
     bool show_demo_window = false;
+    bool show_implot_demo = false;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    // ImVec4 clear_color = ImVec4(1.f, 0.f, 0.f, 1.00f);
 
     // Main loop
 
     while (!glfwWindowShouldClose(window))
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
         // Resize swap chain?
@@ -498,9 +537,13 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        
+
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
+        if(show_implot_demo)
+            ImPlot::ShowDemoWindow(&show_implot_demo);
         {
             #ifdef IMGUI_HAS_VIEWPORT
             ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -517,19 +560,46 @@ int main(int, char**)
 
             ImGui::Begin("Hello, world!",NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);                          // Create a window called "Hello, world!" and append into it.
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            if (ImGui::BeginTabBar("BasicTabBar", ImGuiTabBarFlags_None))
+            {
+                if (ImGui::BeginTabItem("Examples"))
+                {
+                    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+                    ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Another Window", &show_another_window);
+                    ImGui::Checkbox("ImPlot Demo", &show_implot_demo);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+                    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+                    if (ImGui::Button("Increase counter"))  // Buttons return true when clicked (most widgets return true when edited/activated)
+                        counter++;
+                    ImGui::SameLine();
+                    ImGui::Text("counter = %d", counter);
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Unused 1"))
+                {
+                    int   bar_data[11] = {25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275};
+                    float x_data[1000] = {0};
+                    float y_data[1000] = {0};
+                    if (ImPlot::BeginPlot("My Plot")) {
+                        ImPlot::PlotBars("My Bar Plot", bar_data, 11);
+                        ImPlot::PlotLine("My Line Plot", x_data, y_data, 1000);
+                        ImPlot::EndPlot();
+                    }
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Unused 2"))
+                {
+                    ImGui::Text("This is the Cucumber tab!\nblah blah blah blah blah");
+                    ImGui::EndTabItem();
+                }
+                ImGui::EndTabBar();
+            }
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
             ImGui::End();
             
         }
@@ -568,6 +638,7 @@ int main(int, char**)
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     CleanupVulkanWindow();
