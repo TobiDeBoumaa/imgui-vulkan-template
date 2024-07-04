@@ -4,7 +4,7 @@ imgui vulkan Template for simple GUIs
 ## Cloning the repo
 Because of the submodules, this repo needs to be cloned using:
 ```
-git clone --recursive git@github.com:TobiDeBoumaa/imgui-vulkan-template.git
+git clone --recursive https://github.com/TobiDeBoumaa/imgui-vulkan-template
 ```
 ## Build
 Build the project using cmake with the following command:
