@@ -1,6 +1,11 @@
+#define IMGUI_ENABLE_FREETYPE
+#define IMGUI_USE_WCHAR32
+#include "imgui_freetype.h"
 #include "imgui.h"
+
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+// #undef IMGUI_USE_WCHAR32
 #include <implot.h>
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
@@ -21,7 +26,6 @@
 #pragma comment(lib, "dwmapi.lib")
 #endif
 
-
 #include <cstring>
 
 
@@ -36,6 +40,11 @@
 #ifdef _DEBUG
 #define APP_USE_VULKAN_DEBUG_REPORT
 #endif
+
+#include "ImGuiNotify.hpp"
+#include "IconsFontAwesome6.h"
+#include "fa-solid-900.hpp"
+
 
 // Data
 static VkAllocationCallbacks*   g_Allocator = nullptr;
@@ -82,13 +91,35 @@ void scaleUIContent(float scale)
     if((bool)(int)(io.Fonts->Fonts.Size))
         io.FontGlobalScale = 1.0f / scale; // Scaling font if already loaded
     else{
+        static float baseFontSize = 16.0f * scale; // Default font size
         io.Fonts->Clear();
-        ImFont* font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttc", 16.0f * scale);
+        // ImFont* font = io.Fonts->AddFontDefault();
+        ImFont* font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttc", baseFontSize, NULL, io.Fonts->GetGlyphRangesDefault());
+        // ImFont* font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyi.ttf", baseFontSize);
         if (font == NULL)
-            font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttf", 16.0f * scale); // Windows 7
+            font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\msyh.ttf", baseFontSize); // Windows 7
         if (font == NULL)
-            font = io.Fonts->AddFontFromFileTTF("../../Resources/Roboto-Regular.ttf", 16.0f * scale); // Windows 10
+            font = io.Fonts->AddFontFromFileTTF("../../Resources/Roboto-Regular.ttf", baseFontSize); // Windows 10
         IM_ASSERT(font != NULL);
+        float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
+
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+        ImFontConfig icons_config; 
+        icons_config.MergeMode = true; 
+        icons_config.PixelSnapH = true; 
+        icons_config.GlyphMinAdvanceX = iconFontSize;
+        io.Fonts->AddFontFromMemoryCompressedTTF(fa_solid_compressed_data,fa_solid_compressed_size,iconFontSize,&icons_config,icons_ranges);
+        
+        static const ImWchar  emoji_font_ranges[] = {0x1, 0x1FFFF, 0 };
+        static ImFontConfig emoji_font_cfg;
+        emoji_font_cfg.OversampleH = emoji_font_cfg.OversampleV = 1;
+        emoji_font_cfg.MergeMode = true;
+        emoji_font_cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
+        emoji_font_cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_ForceAutoHint;
+        font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0f, &emoji_font_cfg, emoji_font_ranges);
+        if (font == NULL)
+            ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Font not loaded: %s", "Segoe Emoji"});
+        // io.Fonts->Build();
     }
 }
 void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
@@ -468,10 +499,11 @@ int main(int, char**)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+    //io.ConfigViewportsNoAutoMerge = true;    
 
-    
-
-    io.IniFilename = NULL;
+    io.IniFilename = NULL; // Disable .ini file
 
     // Setup Dear ImGui style
     if(isDarkMode()){
@@ -536,24 +568,49 @@ int main(int, char**)
 
         GUI::render();
 
-        ImGui::PopStyleVar(1);
+        /**
+         * Notifications Rendering Start
+        */
+        // Notifications style setup
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f); // Disable round borders
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f); // Disable borders
+        // Notifications color setup
+        if (isDarkMode())
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.10f, 0.10f, 1.00f)); // Background color
+        else
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.90f, 0.90f, 0.90f, 1.00f)); // Background color
+        // Main rendering function
+        ImGui::RenderNotifications();
+        //——————————————————————————————— WARNING ———————————————————————————————
+        // Argument MUST match the amount of ImGui::PushStyleVar() calls 
+        ImGui::PopStyleVar(2);
+        // Argument MUST match the amount of ImGui::PushStyleColor() calls 
+        ImGui::PopStyleColor(1);
+        /**
+         * Notifications Rendering End
+        */
 
         // Rendering
         ImGui::Render();
-        ImDrawData* draw_data = ImGui::GetDrawData();
-        const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
-        if (!is_minimized)
+        ImDrawData* main_draw_data  = ImGui::GetDrawData();
+        const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+        wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+        wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+        wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+        wd->ClearValue.color.float32[3] = clear_color.w;
+        if (!main_is_minimized)
+            FrameRender(wd, main_draw_data);
+        // Update and Render additional Platform Windows
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-            wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-            wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-            wd->ClearValue.color.float32[3] = clear_color.w;
-            FrameRender(wd, draw_data);
-            FramePresent(wd);
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
         }
 
+        // Present Main Platform Window
+        if (!main_is_minimized)
+            FramePresent(wd);
     }
-    
 
     // Cleanup
     err = vkDeviceWaitIdle(g_Device);

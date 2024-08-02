@@ -1,6 +1,7 @@
 [submodule "libs/imgui"]
 	path = libs/imgui
 	url = https://github.com/ocornut/imgui.git
+	branch = docking
 [submodule "libs/glfw"]
 	path = libs/glfw
 	url = https://github.com/glfw/glfw.git
@@ -10,3 +11,6 @@
 [submodule "libs/implot"]
 	path = libs/implot
 	url = https://github.com/epezent/implot.git
+[submodule "libs/freetype"]
+	path = libs/freetype
+	url = https://github.com/freetype/freetype

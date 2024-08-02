@@ -3,6 +3,7 @@
 #include <implot.h>
 
 #include "imgui.h"
+#include "ImGuiNotify.hpp"
 
 bool show_demo_window = false;
 bool show_another_window = false;
@@ -21,8 +22,8 @@ void render() {
   {
 #ifdef IMGUI_HAS_VIEWPORT
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->GetWorkPos());
-    ImGui::SetNextWindowSize(viewport->GetWorkSize());
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
 #else
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
@@ -35,11 +36,14 @@ void render() {
                      ImGuiWindowFlags_NoBringToFrontOnFocus);
     renderMainWindow();
     ImGui::End();
+    ImGui::PopStyleVar(1);
   }
   static bool show_another_another_window = false;
+  if(show_another_another_window){
   ImGui::Begin("Another Window", &show_another_another_window);
   ImGui::Text("Text: %i", show_demo_window);
   ImGui::End();
+  }
 
   // 3. Show another simple window.
   if (show_another_window) {
@@ -79,6 +83,12 @@ void renderMainWindow() {
       ImGui::SameLine();
       ImGui::Text("counter = %d", counter);
       ImGui::EndTabItem();
+      if (ImGui::Button("Success")) {
+	    	ImGui::InsertNotification({ImGuiToastType::Success, 3000, "That is a success! %s", "(Format here)"});
+	    }
+      ImGui::Text("😊Hello, wöörld! 🫤");
+      ImGui::Text("🍉 🍊 🍋");
+      ImGui::Text("Funktionirän die Ümlaute? 💩 ->ß<-");
     }
     if (ImGui::BeginTabItem("Unused 1")) {
       int bar_data[11] = {25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275};
