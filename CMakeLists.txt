@@ -50,18 +50,47 @@ include_directories(${GLFW_DIR}/deps)
 # For FontAwesome Icons
 include_directories(libs/IconFontCppHeaders)
 
+# For Notifications
 include_directories(libs/ImGuiNotify)
+
+# For System File Dialog
+add_subdirectory(libs/nativefiledialog-extended)
+
 
 #file(GLOB sources *.cpp)
 
-add_executable(${PROJECT_NAME} main.cpp src/GUI.cpp ${IMGUI_DIR}/misc/freetype/imgui_freetype.cpp ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_tables.cpp ${IMGUI_DIR}/imgui_widgets.cpp ${IMPLOT_DIR}/implot_demo.cpp ${IMPLOT_DIR}/implot_items.cpp ${IMPLOT_DIR}/implot.cpp)
+set(SOURCES
+  main.cpp
+  src/GUI.cpp
+)
+
+set(IMGUI_SOURCES
+  ${IMGUI_DIR}/misc/freetype/imgui_freetype.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+  ${IMGUI_DIR}/imgui.cpp
+  ${IMGUI_DIR}/imgui_draw.cpp
+  ${IMGUI_DIR}/imgui_demo.cpp
+  ${IMGUI_DIR}/imgui_tables.cpp
+  ${IMGUI_DIR}/imgui_widgets.cpp
+  ${IMPLOT_DIR}/implot_demo.cpp
+  ${IMPLOT_DIR}/implot_items.cpp
+  ${IMPLOT_DIR}/implot.cpp
+)
+
+set(BACKEND_SOURCES
+  ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${BACKEND_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
-target_link_libraries(${PROJECT_NAME} freetype)
+target_link_libraries(${PROJECT_NAME} freetype nfd)
 
 # target_link_libraries(${PROJECT_NAME} harfbuzz ${FREETYPE_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
-# if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-#   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
-# endif()
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
+endif()

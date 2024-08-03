@@ -4,7 +4,7 @@
 	branch = docking
 [submodule "libs/glfw"]
 	path = libs/glfw
-	url = https://github.com/glfw/glfw.git
+	url = https://github.com/TobiDeBoumaa/glfw-darkMode.git
 [submodule "libs/IconFontCppHeaders"]
 	path = libs/IconFontCppHeaders
 	url = https://github.com/juliettef/IconFontCppHeaders.git
@@ -14,3 +14,7 @@
 [submodule "libs/freetype"]
 	path = libs/freetype
 	url = https://github.com/freetype/freetype
+[submodule "libs/nativefiledialog-extended"]
+	path = libs/nativefiledialog-extended
+	url = https://github.com/btzy/nativefiledialog-extended
+	tag = v1.2.1

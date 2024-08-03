@@ -1,5 +1,3 @@
-#define IMGUI_ENABLE_FREETYPE
-#define IMGUI_USE_WCHAR32
 #include "imgui_freetype.h"
 #include "imgui.h"
 
@@ -60,6 +58,7 @@ static VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
 static ImGui_ImplVulkanH_Window g_MainWindowData;
 static int                      g_MinImageCount = 2;
 static bool                     g_SwapChainRebuild = false;
+static float                    g_Scale = 1.5f;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -67,7 +66,7 @@ static void glfw_error_callback(int error, const char* description)
 }
 void scaleUIContent(float scale)
 {
-    
+    scale *=g_Scale;
     ImGuiIO& io = ImGui::GetIO();
     printf("Scaling by: %f\n", scale);
     ImGuiStyle& style = ImGui::GetStyle();

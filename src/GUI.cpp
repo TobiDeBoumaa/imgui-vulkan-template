@@ -5,11 +5,29 @@
 #include "imgui.h"
 #include "ImGuiNotify.hpp"
 
+#include "nfd.hpp"
+
 bool show_demo_window = false;
 bool show_another_window = false;
 bool show_implot_demo = false;
 
 namespace GUI {
+static std::string filepicker() {
+    NFD::Guard nfdGuard;
+    NFD::UniquePath outPath;
+    nfdresult_t result = NFD::PickFolder(outPath);
+    if (result == NFD_OKAY) {
+        ImGui::InsertNotification({ImGuiToastType::Success, 3000, "Success! %s", outPath.get()});
+        return outPath.get();
+    }
+    else if (result == NFD_CANCEL) {
+        ImGui::InsertNotification({ImGuiToastType::Warning, 3000, "User pressed cancel."});
+    }
+    else {
+        ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Error: %s", NFD::GetError()});
+    }
+    return "";
+}
 void init() {
   // Code here will be run once
 }
@@ -86,6 +104,10 @@ void renderMainWindow() {
       if (ImGui::Button("Success")) {
 	    	ImGui::InsertNotification({ImGuiToastType::Success, 3000, "That is a success! %s", "(Format here)"});
 	    }
+      ImGui::SameLine();
+      if (ImGui::Button("File Picker")) {
+        filepicker();
+      }
       ImGui::Text("😊Hello, wöörld! 🫤");
       ImGui::Text("🍉 🍊 🍋");
       ImGui::Text("Funktionirän die Ümlaute? 💩 ->ß<-");
