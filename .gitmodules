@@ -21,3 +21,6 @@
 [submodule "libs/CMakeHelpers"]
 	path = libs/CMakeHelpers
 	url = https://github.com/halex2005/CMakeHelpers.git
+[submodule "libs/WinToast"]
+	path = libs/WinToast
+	url = https://github.com/mohabouje/WinToast.git

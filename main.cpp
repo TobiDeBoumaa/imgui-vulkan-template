@@ -39,7 +39,9 @@
 #define APP_USE_VULKAN_DEBUG_REPORT
 #endif
 
-#include "ImGuiNotify.hpp"
+// #include "ImGuiNotify.hpp"
+#include "notificationHandler.hpp"
+using namespace WinToastLib;
 #include "IconsFontAwesome6.h"
 #include "fa-solid-900.hpp"
 
@@ -116,8 +118,8 @@ void scaleUIContent(float scale)
         emoji_font_cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
         emoji_font_cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_ForceAutoHint;
         font = io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\seguiemj.ttf", 16.0f, &emoji_font_cfg, emoji_font_ranges);
-        if (font == NULL)
-            ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Font not loaded: %s", "Segoe Emoji"});
+        // if (font == NULL)
+        //     ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Font not loaded: %s", "Segoe Emoji"});
         // io.Fonts->Build();
     }
 }
@@ -540,6 +542,19 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     // ImVec4 clear_color = ImVec4(1.f, 0.f, 0.f, 1.00f);
 
+    // Check if notifications are possible
+    if (!WinToast::isCompatible()) {
+        std::wcout << L"Error, your system in not supported!" << std::endl;
+    }
+    WinToast::instance()->setAppName(L"WinToastExample");
+    const auto aumi = WinToast::configureAUMI(L"mohabouje", L"wintoast", L"wintoastexample", L"20161006");
+    WinToast::instance()->setAppUserModelId(aumi);
+    if (!WinToast::instance()->initialize()) {
+        std::wcout << L"Error, could not initialize the lib!" << std::endl;
+    }
+    WinToastHandlerExample* handler = new WinToastHandlerExample;
+    
+
     // Main loop
     GUI::init();
     while (!glfwWindowShouldClose(window))
@@ -579,7 +594,7 @@ int main(int, char**)
         else
         ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.90f, 0.90f, 0.90f, 1.00f)); // Background color
         // Main rendering function
-        ImGui::RenderNotifications();
+        // ImGui::RenderNotifications();
         //——————————————————————————————— WARNING ———————————————————————————————
         // Argument MUST match the amount of ImGui::PushStyleVar() calls 
         ImGui::PopStyleVar(2);

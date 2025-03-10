@@ -3,7 +3,10 @@
 #include <implot.h>
 
 #include "imgui.h"
-#include "ImGuiNotify.hpp"
+// #include "ImGuiNotify.hpp"
+#include "notificationHandler.hpp"
+using namespace WinToastLib;
+WinToastHandlerExample* handler = new WinToastHandlerExample();
 
 #include "nfd.hpp"
 
@@ -17,15 +20,15 @@ static std::string filepicker() {
     NFD::UniquePath outPath;
     nfdresult_t result = NFD::PickFolder(outPath);
     if (result == NFD_OKAY) {
-        ImGui::InsertNotification({ImGuiToastType::Success, 3000, "Success! %s", outPath.get()});
+        // ImGui::InsertNotification({ImGuiToastType::Success, 3000, "Success! %s", outPath.get()});
         return outPath.get();
     }
-    else if (result == NFD_CANCEL) {
-        ImGui::InsertNotification({ImGuiToastType::Warning, 3000, "User pressed cancel."});
-    }
-    else {
-        ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Error: %s", NFD::GetError()});
-    }
+    // else if (result == NFD_CANCEL) {
+    //     ImGui::InsertNotification({ImGuiToastType::Warning, 3000, "User pressed cancel."});
+    // }
+    // else {
+    //     ImGui::InsertNotification({ImGuiToastType::Error, 3000, "Error: %s", NFD::GetError()});
+    // }
     return "";
 }
 void init() {
@@ -75,6 +78,7 @@ void render() {
     ImGui::End();
   }
 }
+
 void renderMainWindow() {
   if (ImGui::BeginTabBar("BasicTabBar", ImGuiTabBarFlags_None)) {
     if (ImGui::BeginTabItem("Examples")) {
@@ -102,7 +106,10 @@ void renderMainWindow() {
       ImGui::Text("counter = %d", counter);
       ImGui::EndTabItem();
       if (ImGui::Button("Success")) {
-	    	ImGui::InsertNotification({ImGuiToastType::Success, 3000, "That is a success! %s", "(Format here)"});
+        WinToastTemplate templ = WinToastTemplate(WinToastTemplate::Text01);
+        templ.setTextField(L"Test Benachrichtigung", WinToastTemplate::FirstLine);
+        WinToast::instance()->showToast(templ, handler);
+	    	// ImGui::InsertNotification({ImGuiToastType::Success, 3000, "That is a success! %s", "(Format here)"});
 	    }
       ImGui::SameLine();
       if (ImGui::Button("File Picker")) {

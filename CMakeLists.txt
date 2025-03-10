@@ -51,7 +51,11 @@ include_directories(${GLFW_DIR}/deps)
 include_directories(libs/IconFontCppHeaders)
 
 # For Notifications
-include_directories(libs/ImGuiNotify)
+if (WIN32)
+  option(WINTOASTLIB_BUILD_EXAMPLES "Build WinToast examples" OFF)
+  add_subdirectory(libs/WinToast EXCLUDE_FROM_ALL)
+endif ()
+# include_directories(libs/ImGuiNotify)
 
 # For System File Dialog
 add_subdirectory(libs/nativefiledialog-extended)
@@ -96,9 +100,11 @@ set(BACKEND_SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${BACKEND_SOURCES} ${target-files} ${ProductVersionFiles})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_link_libraries(${PROJECT_NAME} freetype nfd)
+target_link_libraries(${PROJECT_NAME} WinToast)
 
 # target_link_libraries(${PROJECT_NAME} harfbuzz ${FREETYPE_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE src/)
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
