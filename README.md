@@ -32,6 +32,7 @@ cmake --build build --config Debug
 <details>
 <summary>Requirements Windows</summary>
 vulkan sdk is required: https://vulkan.lunarg.com/sdk/home#windows
+pkgconfig (not required): https://sourceforge.net/projects/pkgconfiglite/
 </details>
 
 

@@ -18,3 +18,6 @@
 	path = libs/nativefiledialog-extended
 	url = https://github.com/btzy/nativefiledialog-extended
 	tag = v1.2.1
+[submodule "libs/CMakeHelpers"]
+	path = libs/CMakeHelpers
+	url = https://github.com/halex2005/CMakeHelpers.git

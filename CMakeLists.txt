@@ -56,6 +56,16 @@ include_directories(libs/ImGuiNotify)
 # For System File Dialog
 add_subdirectory(libs/nativefiledialog-extended)
 
+# For CmakeHelpers
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/CMakeHelpers")
+include(generate_product_version)
+generate_product_version(ProductVersionFiles
+    NAME MyProduct
+    VERSION_MAJOR 3
+    VERSION_MINOR 2
+    VERSION_PATCH 12
+    VERSION_REVISION 30303
+    COMPANY_NAME MyCompany)
 
 #file(GLOB sources *.cpp)
 
@@ -83,7 +93,7 @@ set(BACKEND_SOURCES
   ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${BACKEND_SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${BACKEND_SOURCES} ${target-files} ${ProductVersionFiles})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 target_link_libraries(${PROJECT_NAME} freetype nfd)
 
