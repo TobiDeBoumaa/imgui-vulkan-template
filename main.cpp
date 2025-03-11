@@ -25,6 +25,7 @@
 #endif
 
 #include <cstring>
+#include <string>
 
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -45,6 +46,10 @@ using namespace WinToastLib;
 #include "IconsFontAwesome6.h"
 #include "fa-solid-900.hpp"
 
+#define STRING(s) #s
+#define TOSTRING(X)  STRING(X)
+#define WSTRING(s) L#s
+#define TOWSTRING(X)  WSTRING(X)
 
 // Data
 static VkAllocationCallbacks*   g_Allocator = nullptr;
@@ -465,7 +470,11 @@ int main(int, char**)
 
     // Create window with Vulkan context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Window Title Name", nullptr, nullptr);
+    #ifdef PROGI_NAME
+    GLFWwindow* window = glfwCreateWindow(1280, 720, TOSTRING(PROGI_NAME), nullptr, nullptr);
+    #else
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", nullptr, nullptr);
+    #endif
     if (!glfwVulkanSupported())
     {
         printf("GLFW: Vulkan Not Supported\n");
@@ -546,8 +555,8 @@ int main(int, char**)
     if (!WinToast::isCompatible()) {
         std::wcout << L"Error, your system in not supported!" << std::endl;
     }
-    WinToast::instance()->setAppName(L"WinToastExample");
-    const auto aumi = WinToast::configureAUMI(L"mohabouje", L"wintoast", L"wintoastexample", L"20161006");
+    WinToast::instance()->setAppName(TOWSTRING(PROGI_NAME));
+    const auto aumi = WinToast::configureAUMI(TOWSTRING(COMPANY_NAME), TOWSTRING(PRODUCT_NAME), TOWSTRING(SUB_PRODUCT_NAME), std::to_wstring(VERSION_MAJOR) + std::to_wstring(VERSION_MINOR) + std::to_wstring(VERSION_PATCH));
     WinToast::instance()->setAppUserModelId(aumi);
     if (!WinToast::instance()->initialize()) {
         std::wcout << L"Error, could not initialize the lib!" << std::endl;

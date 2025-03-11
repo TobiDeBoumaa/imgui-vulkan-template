@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
-project(imgui_example_glfw_vulkan C CXX)
+set(PROG_NAME "Imgui Vulkan App")
+set(PRODUCT_NAME imguivulkanapp)
+set(SUB_PRODUCT_NAME imguivulkanappexample)
+set(COMPANY_NAME MyCompany)
+set(VERSION_MAJOR 1)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 0)
+project(imgui_vulkan_example_app C CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
@@ -64,12 +71,12 @@ add_subdirectory(libs/nativefiledialog-extended)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/CMakeHelpers")
 include(generate_product_version)
 generate_product_version(ProductVersionFiles
-    NAME MyProduct
-    VERSION_MAJOR 3
-    VERSION_MINOR 2
-    VERSION_PATCH 12
-    VERSION_REVISION 30303
-    COMPANY_NAME MyCompany)
+    NAME ${PROG_NAME}
+    VERSION_MAJOR ${VERSION_MAJOR}
+    VERSION_MINOR ${VERSION_MINOR}
+    VERSION_PATCH ${VERSION_PATCH}
+    VERSION_REVISION 0
+    COMPANY_NAME ${COMPANY_NAME})
 
 #file(GLOB sources *.cpp)
 
@@ -106,6 +113,17 @@ target_link_libraries(${PROJECT_NAME} WinToast)
 target_include_directories(${PROJECT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE src/)
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DImTextureID=ImU64)
+
+if (PROG_NAME)
+    message(STATUS "Setting PROG_NAME to ${PROG_NAME}")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE PROGI_NAME=${PROG_NAME})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE PRODUCT_NAME=${PRODUCT_NAME})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE SUB_PRODUCT_NAME=${SUB_PRODUCT_NAME})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE COMPANY_NAME=${COMPANY_NAME})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_MAJOR=${VERSION_MAJOR})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_MINOR=${VERSION_MINOR})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_PATCH=${VERSION_PATCH})
+endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
