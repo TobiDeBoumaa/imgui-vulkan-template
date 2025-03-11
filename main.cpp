@@ -553,13 +553,13 @@ int main(int, char**)
 
     // Check if notifications are possible
     if (!WinToast::isCompatible()) {
-        std::wcout << L"Error, your system in not supported!" << std::endl;
+        std::cout << "Error, your system in not supported for notifications!" << std::endl;
     }
     WinToast::instance()->setAppName(TOWSTRING(PROGI_NAME));
     const auto aumi = WinToast::configureAUMI(TOWSTRING(COMPANY_NAME), TOWSTRING(PRODUCT_NAME), TOWSTRING(SUB_PRODUCT_NAME), std::to_wstring(VERSION_MAJOR) + std::to_wstring(VERSION_MINOR) + std::to_wstring(VERSION_PATCH));
     WinToast::instance()->setAppUserModelId(aumi);
     if (!WinToast::instance()->initialize()) {
-        std::wcout << L"Error, could not initialize the lib!" << std::endl;
+        std::cout << "Error, could not initialize the WinToast-Lib!" << std::endl;
     }
     WinToastHandlerExample* handler = new WinToastHandlerExample;
     
